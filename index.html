@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="es" data-lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tomás Parodi — Arquitectura & Visualización</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#080808;--bg2:#101010;--text:#f0ebe0;--muted:#9a958d;--accent:#c4a97d;--line:rgba(240,235,224,0.07);--serif:'Cormorant Garamond',Georgia,serif;--sans:'Syne',sans-serif}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;cursor:none}
+
+/* INTRO */
+#intro{position:fixed;inset:0;z-index:5000;background:#080808;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:22px;pointer-events:none;opacity:1;transition:opacity 0.9s ease;visibility:visible}
+#intro.fade-out{opacity:0;visibility:hidden;transition:opacity 0.9s ease,visibility 0s 0.9s}
+.intro-name{font-family:var(--serif);font-size:clamp(3.5rem,11vw,8.5rem);font-weight:300;letter-spacing:-.02em;color:var(--text);text-align:center;line-height:.88}
+.intro-word{display:block;overflow:hidden}
+.intro-word span{display:block;opacity:0;transform:translateY(90px);animation:wordUp .9s cubic-bezier(.16,1,.3,1) forwards}
+.intro-word:nth-child(1) span{animation-delay:.05s}
+.intro-word:nth-child(2) span{animation-delay:.22s}
+.intro-rule{width:0;height:1px;background:var(--accent);animation:ruleExpand .8s ease .7s forwards}
+.intro-tag{font-size:.62rem;font-weight:600;letter-spacing:.28em;text-transform:uppercase;color:var(--accent);opacity:0;animation:fadeUp .7s ease 1.2s forwards}
+@keyframes wordUp{to{opacity:1;transform:translateY(0)}}
+@keyframes ruleExpand{to{width:min(360px,55vw)}}
+
+/* CURSOR */
+.cursor{position:fixed;width:7px;height:7px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s}
+.cursor-ring{position:fixed;width:30px;height:30px;border:1px solid rgba(196,169,125,.35);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .15s,height .15s,border-color .15s}
+.cursor.h{width:4px;height:4px}
+.cursor-ring.h{width:46px;height:46px;border-color:var(--accent)}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:28px 56px;display:flex;align-items:center;justify-content:flex-end;transition:transform .4s,background .4s,padding .3s}
+nav.scrolled{background:rgba(8,8,8,.94);backdrop-filter:blur(14px);padding:18px 56px;border-bottom:1px solid var(--line)}
+nav.hidden{transform:translateY(-100%)}
+.nav-right{display:flex;align-items:center;gap:36px}
+.nav-links{display:flex;gap:32px;list-style:none}
+.nav-links a{font-size:.62rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .3s}
+.nav-links a:hover{color:var(--text)}
+.lang-toggle{display:flex;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.lang-btn{font-family:var(--sans);font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:5px 11px;cursor:pointer;border:none;outline:none;background:transparent;color:var(--muted);transition:background .2s,color .2s}
+.lang-btn.active{background:var(--accent);color:#080808}
+.burger{display:none;background:transparent;border:none;cursor:pointer;padding:8px;gap:5px;flex-direction:column}
+.burger span{width:22px;height:1.5px;background:var(--text);transition:transform .3s,opacity .3s}
+.burger.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+.burger.open span:nth-child(2){opacity:0}
+.burger.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+
+/* HERO */
+#hero{position:relative;height:100vh;min-height:620px;display:flex;align-items:flex-end;padding:0 56px 88px;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background-image:url('https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280790/Drone_Airport_7_wl22fj.jpg');background-size:cover;background-position:center 40%;transform:scale(1.08);transition:transform 1.6s cubic-bezier(.25,.46,.45,.94);will-change:transform}
+.hero-bg.ready{transform:scale(1)}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,8,8,1) 0%,rgba(8,8,8,.75) 25%,rgba(8,8,8,.3) 55%,rgba(8,8,8,.08) 100%)}
+.hero-content{position:relative;z-index:2}
+.hero-name{font-family:var(--serif);font-size:clamp(4.5rem,11vw,9.5rem);font-weight:300;line-height:.88;letter-spacing:-.025em;color:var(--text)}
+.hero-name .line{display:block;overflow:hidden}
+.hero-name .line span{display:block;opacity:0;transform:translateY(70px);animation:slideUp 1s cubic-bezier(.16,1,.3,1) 2.6s forwards}
+.hero-name .line:nth-child(2) span{animation-delay:2.78s}
+.hero-sub{margin-top:36px;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);opacity:0;animation:fadeUp .8s ease 3.1s forwards}
+.hero-scroll{position:absolute;bottom:88px;right:56px;display:flex;align-items:center;gap:14px;opacity:0;animation:fadeUp .8s ease 3.4s forwards}
+.scroll-label{font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);writing-mode:vertical-rl}
+.scroll-bar{width:1px;height:64px;background:linear-gradient(to bottom,var(--accent),transparent);animation:scrollPulse 2.4s ease 3.6s infinite;opacity:0;animation-fill-mode:forwards}
+
+/* SECTIONS */
+.work-section{padding:128px 56px}
+.sec-header{display:flex;align-items:baseline;gap:20px;margin-bottom:80px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.sec-num{font-size:.62rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
+.sec-title{font-family:var(--serif);font-size:clamp(2.8rem,5.5vw,5rem);font-weight:300;letter-spacing:-.025em;color:var(--text)}
+
+/* PROJECTS */
+.proj{margin-bottom:108px}
+.proj:last-child{margin-bottom:0}
+.proj-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:14px}
+.proj-name{font-family:var(--serif);font-size:clamp(1.6rem,3vw,2.6rem);font-weight:400;font-style:italic;color:var(--text)}
+.proj-tags{display:flex;gap:10px;flex-wrap:wrap}
+.tag{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);padding:4px 10px;border-radius:2px}
+.tag.own{color:var(--accent);border-color:rgba(196,169,125,.25)}
+
+/* JUSTIFIED FLEX LAYOUT - CLOUDINARY STYLE */
+.proj-gallery{display:flex;flex-wrap:wrap;gap:6px}
+.proj-gallery .img-block{cursor:pointer;overflow:hidden;background:#0a0a0a;position:relative;flex-grow:1;height:var(--row-h,300px)}
+.proj-gallery img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .65s cubic-bezier(.25,.46,.45,.94),filter .5s;filter:brightness(.9)}
+.proj-gallery .img-block:hover img{transform:scale(1.03);filter:brightness(1.02)}
+.proj-gallery::after{content:"";flex-grow:999}
+
+/* VR SECTION */
+.vr-shell{width:100%;height:540px;margin-top:32px;position:relative;background:var(--bg2);overflow:hidden;cursor:zoom-in}
+.vr-mini{width:100%;height:100%}
+.vr-hint{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(240,235,224,.65);background:rgba(0,0,0,.5);padding:7px 18px;border-radius:20px;pointer-events:none;z-index:10;animation:fadeHint 1s ease 4s forwards}
+@keyframes fadeHint{to{opacity:0}}
+.vr-caption{margin-top:20px;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.pnlm-container{background:var(--bg)!important}
+
+/* VR FULLSCREEN OVERLAY (separate viewer, instant) */
+#vrFullscreen{position:fixed;inset:0;z-index:2000;background:#000;display:none}
+#vrFullscreen.active{display:block}
+.vr-full-canvas{width:100%;height:100%}
+.vr-close{position:fixed;top:24px;right:24px;width:44px;height:44px;background:rgba(0,0,0,.6);border:1px solid var(--line);color:var(--text);font-size:1.5rem;cursor:pointer;z-index:2001;transition:background .3s,border-color .3s;display:none;align-items:center;justify-content:center;line-height:1;border-radius:2px}
+.vr-close.active{display:flex}
+.vr-close:hover{background:rgba(0,0,0,.9);border-color:var(--accent)}
+
+/* ABOUT */
+#about{padding:128px 56px;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.about-label{font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:28px}
+.about-title{font-family:var(--serif);font-size:clamp(2.2rem,4vw,3.8rem);font-weight:300;line-height:1.1;color:var(--text);margin-bottom:32px}
+.about-text{font-size:.88rem;line-height:1.85;color:var(--muted);max-width:420px;margin-bottom:14px}
+.about-stats{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line)}
+.stat{padding:36px 40px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat:nth-child(2n){border-right:none}
+.stat:nth-child(3),.stat:nth-child(4){border-bottom:none}
+.stat-num{font-family:var(--serif);font-size:3.2rem;font-weight:300;color:var(--text);line-height:1;margin-bottom:8px}
+.stat-label{font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+
+/* CONTACT */
+#contact{padding:128px 56px;border-top:1px solid var(--line);display:flex;flex-direction:column;align-items:center;text-align:center}
+.contact-over{font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;color:var(--accent);margin-bottom:36px}
+.contact-title{font-family:var(--serif);font-size:clamp(4.5rem,13vw,11rem);font-weight:300;line-height:.88;color:var(--text);letter-spacing:-.03em;margin-bottom:52px}
+.contact-links{display:flex;gap:44px}
+.c-link{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);text-decoration:none;border-bottom:1px solid transparent;padding-bottom:4px;transition:color .3s,border-color .3s}
+.c-link:hover{color:var(--text);border-color:var(--accent)}
+
+/* FOOTER */
+footer{padding:28px 56px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line)}
+footer p{font-size:.62rem;letter-spacing:.1em;color:var(--muted)}
+
+/* LIGHTBOX */
+#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.97);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .28s;cursor:zoom-out}
+#lightbox.active{opacity:1;pointer-events:all}
+#lightbox img{max-width:90vw;max-height:90vh;object-fit:contain;transform:scale(.96);transition:transform .3s}
+#lightbox.active img{transform:scale(1)}
+.lb-close{position:fixed;top:32px;right:56px;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:color .3s;z-index:1001}
+.lb-close:hover{color:var(--text)}
+.lb-prev,.lb-next{position:fixed;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.5);border:1px solid var(--line);color:var(--text);font-size:3rem;padding:20px 16px;cursor:pointer;transition:background .3s,border-color .3s;z-index:1001;line-height:1}
+.lb-prev{left:20px}
+.lb-next{right:20px}
+.lb-prev:hover,.lb-next:hover{background:rgba(0,0,0,.8);border-color:var(--accent)}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(36px);transition:opacity .85s ease,transform .85s cubic-bezier(.16,1,.3,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* KEYFRAMES */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(70px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scrollPulse{0%,100%{opacity:.35}50%{opacity:1}}
+
+/* TOUCH DEVICES */
+@media (hover:none) and (pointer:coarse){
+  body{cursor:auto}
+  .cursor,.cursor-ring{display:none}
+}
+
+/* MOBILE */
+@media (max-width:768px){
+  .intro-name{font-size:clamp(2.8rem,14vw,5rem)}
+  .intro-tag{font-size:.55rem;letter-spacing:.22em;padding:0 24px;text-align:center}
+  .intro-rule{animation:ruleExpandMobile .8s ease .7s forwards}
+  
+  nav,nav.scrolled{padding:16px 20px}
+  .nav-right{gap:14px}
+  .nav-links{position:fixed;top:0;right:0;width:80%;max-width:320px;height:100vh;background:rgba(8,8,8,.98);backdrop-filter:blur(20px);flex-direction:column;justify-content:center;align-items:flex-start;gap:28px;padding:80px 40px;transform:translateX(100%);transition:transform .4s cubic-bezier(.77,0,.18,1);border-left:1px solid var(--line);z-index:90}
+  .nav-links.open{transform:translateX(0)}
+  .nav-links a{font-size:.9rem;color:var(--text);letter-spacing:.12em}
+  .lang-toggle{order:2}
+  .lang-btn{padding:6px 12px;font-size:.6rem}
+  .burger{display:flex;order:3;z-index:110;position:relative}
+  
+  #hero{padding:0 20px 56px;min-height:100vh}
+  .hero-name{font-size:clamp(3.5rem,16vw,6rem)}
+  .hero-sub{font-size:.58rem;letter-spacing:.14em;margin-top:24px;line-height:1.6}
+  .hero-scroll{right:20px;bottom:56px}
+  .scroll-bar{height:48px}
+  
+  .work-section{padding:72px 20px}
+  .work-section[id="architecture"]{padding-top:110px!important}
+  .sec-header{margin-bottom:48px;gap:14px;flex-wrap:wrap}
+  .sec-title{font-size:clamp(2.2rem,9vw,3.5rem)}
+  .sec-num{font-size:.58rem}
+  
+  .proj{margin-bottom:64px}
+  .proj-head{flex-direction:column;align-items:flex-start;gap:14px;margin-bottom:20px}
+  .proj-name{font-size:1.6rem}
+  .tag{font-size:.54rem;padding:3px 8px}
+  
+  .proj-gallery{gap:4px}
+  .proj-gallery .img-block{height:200px!important}
+  
+  #about{padding:72px 20px;grid-template-columns:1fr;gap:40px}
+  .about-title{font-size:clamp(1.8rem,8vw,2.6rem)}
+  .about-text{font-size:.82rem;max-width:100%}
+  .stat{padding:24px 20px}
+  .stat-num{font-size:2.2rem}
+  
+  .vr-shell{height:300px}
+  .vr-caption{font-size:.58rem;letter-spacing:.1em}
+  
+  #contact{padding:80px 20px}
+  .contact-over{font-size:.55rem;letter-spacing:.22em;margin-bottom:24px}
+  .contact-title{font-size:clamp(3rem,18vw,5.5rem);margin-bottom:36px}
+  .contact-links{flex-direction:column;gap:18px;align-items:center}
+  .c-link{font-size:.62rem}
+  
+  footer{padding:20px;flex-direction:column;gap:10px;text-align:center}
+  footer p{font-size:.56rem}
+  
+  .lb-close{top:20px;right:20px;font-size:.58rem}
+  .lb-prev,.lb-next{font-size:2rem;padding:14px 10px}
+}
+
+@media (max-width:380px){
+  .lang-btn{padding:5px 9px;font-size:.56rem}
+  .hero-name{font-size:clamp(3rem,14vw,5rem)}
+}
+
+@keyframes ruleExpandMobile{to{width:60vw}}
+</style>
+</head>
+<body>
+
+<div id="intro">
+  <div class="intro-name">
+    <span class="intro-word"><span>Tomás</span></span>
+    <span class="intro-word"><span>Parodi</span></span>
+  </div>
+  <div class="intro-rule"></div>
+  <p class="intro-tag">Arquitectura &amp; Visualización</p>
+</div>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="ring"></div>
+
+<nav id="nav">
+  <div class="nav-right">
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#architecture" data-es="Arquitectura" data-en="Architecture">Arquitectura</a></li>
+      <li><a href="#workspaces" data-es="Oficinas" data-en="Offices">Oficinas</a></li>
+      <li><a href="#corporate" data-es="Espacios Corporativos" data-en="Corporate Spaces">Espacios Corporativos</a></li>
+      <li><a href="#furniture" data-es="Mobiliario" data-en="Furniture">Mobiliario</a></li>
+      <li><a href="#contact" data-es="Contacto" data-en="Contact">Contacto</a></li>
+    </ul>
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btnEs">ES</button>
+      <button class="lang-btn" id="btnEn">EN</button>
+    </div>
+    <button class="burger" id="burger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<section id="hero">
+  <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <h1 class="hero-name">
+      <span class="line"><span>Tomás</span></span>
+      <span class="line"><span>Parodi</span></span>
+    </h1>
+    <p class="hero-sub" data-es="Buenos Aires · Arquitectura &amp; Visualización Digital" data-en="Buenos Aires · Architecture &amp; Digital Visualization">Buenos Aires · Arquitectura &amp; Visualización Digital</p>
+  </div>
+  <div class="hero-scroll">
+    <span class="scroll-label">Scroll</span>
+    <div class="scroll-bar"></div>
+  </div>
+</section>
+
+<!-- 01 ARQUITECTURA -->
+<section class="work-section" id="architecture" style="padding-top:160px">
+  <div class="sec-header reveal">
+    <span class="sec-num">01</span>
+    <h2 class="sec-title" data-es="Arquitectura" data-en="Architecture">Arquitectura</h2>
+  </div>
+
+  <div class="proj reveal">
+    <div class="proj-head">
+      <h3 class="proj-name" data-es="Aeropuerto" data-en="Airport">Aeropuerto</h3>
+      <div class="proj-tags">
+        <span class="tag" data-es="Arquitectura" data-en="Architecture">Arquitectura</span>
+        <span class="tag" data-es="Infraestructura" data-en="Infrastructure">Infraestructura</span>
+        <span class="tag own" data-es="Diseño Propio" data-en="Own design">Diseño Propio</span>
+      </div>
+    </div>
+    <div class="proj-gallery" style="--row-h:320px">
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280790/Drone_Airport_7_wl22fj.jpg" style="flex-grow:1.6"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280790/Drone_Airport_7_wl22fj.jpg" alt="Aeropuerto" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280797/Drone_Airport_1_mg1841.jpg" style="flex-grow:1.5"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280797/Drone_Airport_1_mg1841.jpg" alt="Aeropuerto" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280795/Drone_Airport_6_zpkiy3.jpg" style="flex-grow:1.5"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280795/Drone_Airport_6_zpkiy3.jpg" alt="Aeropuerto" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280795/Drone_Airport_4_paigkj.jpg" style="flex-grow:1.5"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280795/Drone_Airport_4_paigkj.jpg" alt="Aeropuerto" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280793/Drone_Airport_2_ydx3me.jpg" style="flex-grow:1.5"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280793/Drone_Airport_2_ydx3me.jpg" alt="Aeropuerto" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280793/Drone_Airport_5_jwp9rw.jpg" style="flex-grow:1"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280793/Drone_Airport_5_jwp9rw.jpg" alt="Aeropuerto" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280791/Drone_Airport_3_f8tujb.jpg" style="flex-grow:1"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280791/Drone_Airport_3_f8tujb.jpg" alt="Aeropuerto" loading="lazy"></div>
+    </div>
+  </div>
+
+  <div class="proj reveal">
+    <div class="proj-head">
+      <h3 class="proj-name" data-es="Coffee Store" data-en="Coffee Store">Coffee Store</h3>
+      <div class="proj-tags">
+        <span class="tag" data-es="Interiorismo" data-en="Interior design">Interiorismo</span>
+        <span class="tag" data-es="Cartelería" data-en="Signage">Cartelería</span>
+        <span class="tag own" data-es="Diseño Propio" data-en="Own design">Diseño Propio</span>
+      </div>
+    </div>
+    <div class="proj-gallery" style="--row-h:420px">
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280808/Coffee_2_gp1ont.jpg" style="flex-grow:1.5"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280808/Coffee_2_gp1ont.jpg" alt="Coffee" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280811/Coffee_4_ctucyl.jpg" style="flex-grow:.7"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_700/v1778280811/Coffee_4_ctucyl.jpg" alt="Coffee" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280808/Coffee_3_u1eesw.jpg" style="flex-grow:1.5"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280808/Coffee_3_u1eesw.jpg" alt="Coffee" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280806/Coffee_1_mxkkkv.jpg" style="flex-grow:1.5"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280806/Coffee_1_mxkkkv.jpg" alt="Coffee" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 ESPACIOS DE TRABAJO -->
+<section class="work-section" id="workspaces">
+  <div class="sec-header reveal">
+    <span class="sec-num">02</span>
+    <h2 class="sec-title" data-es="Oficinas" data-en="Offices">Oficinas</h2>
+  </div>
+
+  <div class="proj reveal">
+    <div class="proj-head">
+      <h3 class="proj-name" data-es="Estudios &amp; Despachos" data-en="Studios &amp; Workspaces">Estudios &amp; Despachos</h3>
+      <div class="proj-tags">
+        <span class="tag" data-es="Interiorismo" data-en="Interior design">Interiorismo</span>
+        <span class="tag" data-es="Obra construida" data-en="Built project">Obra construida</span>
+        <span class="tag own" data-es="Diseño Propio" data-en="Own design">Diseño Propio</span>
+      </div>
+    </div>
+    <div class="proj-gallery" style="--row-h:380px">
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280873/Home_Office_4_kr8ocb.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280873/Home_Office_4_kr8ocb.jpg" alt="Oficinas" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280881/Home_Office_1_g0mbmp.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280881/Home_Office_1_g0mbmp.jpg" alt="Oficinas" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280878/Home_Office_5_o7l8ln.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280878/Home_Office_5_o7l8ln.jpg" alt="Oficinas" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280874/Home_Office_2_hcmc5f.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280874/Home_Office_2_hcmc5f.jpg" alt="Oficinas" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280872/Home_Office_3_y1uysq.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280872/Home_Office_3_y1uysq.jpg" alt="Oficinas" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280871/Office_Studio_2_zgwidw.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280871/Office_Studio_2_zgwidw.jpg" alt="Oficinas" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280871/Office_Studio_3_qdyuqy.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280871/Office_Studio_3_qdyuqy.jpg" alt="Oficinas" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 ESPACIOS CORPORATIVOS -->
+<section class="work-section" id="corporate">
+  <div class="sec-header reveal">
+    <span class="sec-num">03</span>
+    <h2 class="sec-title" data-es="Espacios Corporativos" data-en="Corporate Spaces">Espacios Corporativos</h2>
+  </div>
+
+  <div class="proj reveal">
+    <div class="proj-head">
+      <h3 class="proj-name" data-es="Hall Corporativo · VR 360°" data-en="Corporate Hall · VR 360°">Hall Corporativo · VR 360°</h3>
+      <div class="proj-tags">
+        <span class="tag" data-es="Recorrido virtual" data-en="Virtual tour">Recorrido virtual</span>
+        <span class="tag" data-es="Interactivo" data-en="Interactive">Interactivo</span>
+        <span class="tag own" data-es="Diseño" data-en="Design">Diseño</span>
+      </div>
+    </div>
+    <div class="vr-shell" id="vrShell">
+      <div class="vr-mini" id="panoramaMini"></div>
+      <span class="vr-hint" data-es="← Arrastrá para explorar · Click para ampliar →" data-en="← Drag to explore · Click to expand →">← Arrastrá para explorar · Click para ampliar →</span>
+    </div>
+    <p class="vr-caption" data-es="Hall de entrada · Recorrido 360°" data-en="Entrance hall · 360° tour">Hall de entrada · Recorrido 360°</p>
+  </div>
+
+  <div class="proj reveal">
+    <div class="proj-head">
+      <h3 class="proj-name" data-es="Interiorismo" data-en="Interior Design">Interiorismo</h3>
+      <div class="proj-tags">
+        <span class="tag" data-es="Interiorismo Corporativo" data-en="Corporate Interiors">Interiorismo Corporativo</span>
+        <span class="tag" data-es="Visualización 3D" data-en="3D Visualization">Visualización 3D</span>
+        <span class="tag own" data-es="Diseño" data-en="Design">Diseño</span>
+      </div>
+    </div>
+    <div class="proj-gallery" style="--row-h:300px">
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280886/Interior_Design_6_t7g7vu.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280886/Interior_Design_6_t7g7vu.jpg" alt="Interior" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778281236/Interior_Design_2_gdswtl.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778281236/Interior_Design_2_gdswtl.jpg" alt="Interior" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280889/Interior_Design_8_cngxgz.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280889/Interior_Design_8_cngxgz.jpg" alt="Interior" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280887/Interior_Design_3_ccwz9m.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280887/Interior_Design_3_ccwz9m.jpg" alt="Interior" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280874/Interior_Design_4_g8gzld.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280874/Interior_Design_4_g8gzld.jpg" alt="Interior" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280876/Interior_Design_5_chnwwe.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280876/Interior_Design_5_chnwwe.jpg" alt="Interior" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280875/Interior_Design_7_laf8yc.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280875/Interior_Design_7_laf8yc.jpg" alt="Interior" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280875/Interior_Design_1_tmd2gu.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280875/Interior_Design_1_tmd2gu.jpg" alt="Interior" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 MOBILIARIO & PRODUCTO -->
+<section class="work-section" id="furniture">
+  <div class="sec-header reveal">
+    <span class="sec-num">04</span>
+    <h2 class="sec-title" data-es="Mobiliario &amp; Producto" data-en="Furniture &amp; Product">Mobiliario &amp; Producto</h2>
+  </div>
+
+  <div class="proj reveal">
+    <div class="proj-head">
+      <h3 class="proj-name" data-es="Colecciones" data-en="Collections">Colecciones</h3>
+      <div class="proj-tags">
+        <span class="tag" data-es="Visualización de producto" data-en="Product visualization">Visualización de producto</span>
+        <span class="tag" data-es="Mobiliario" data-en="Furniture">Mobiliario</span>
+        <span class="tag own" data-es="Diseño" data-en="Design">Diseño</span>
+      </div>
+    </div>
+    <div class="proj-gallery" style="--row-h:320px">
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280214/Sell_the_dream_1_hdnaol.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280214/Sell_the_dream_1_hdnaol.jpg" alt="Mobiliario" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280226/Sell_the_dream_6_qksqf2.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280226/Sell_the_dream_6_qksqf2.jpg" alt="Mobiliario" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280220/Sell_the_dream_5_ip72so.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280220/Sell_the_dream_5_ip72so.jpg" alt="Mobiliario" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280220/Furniture_2_qr46cr.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280220/Furniture_2_qr46cr.jpg" alt="Mobiliario" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280218/Furniture_1_gp6k8z.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280218/Furniture_1_gp6k8z.jpg" alt="Mobiliario" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280217/Sell_the_dream_4_ra2bxx.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280217/Sell_the_dream_4_ra2bxx.jpg" alt="Mobiliario" loading="lazy"></div>
+      <div class="img-block" data-full="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280216/Sell_the_dream_3_bzjjem.jpg"><img src="https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85,w_900/v1778280216/Sell_the_dream_3_bzjjem.jpg" alt="Mobiliario" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="reveal">
+    <p class="about-label" data-es="Sobre mí" data-en="About">Sobre mí</p>
+    <h2 class="about-title">Arquitectura<br><em>&amp; Visualización</em></h2>
+    <p class="about-text" data-es="Arquitecto y artista 3D senior radicado en Buenos Aires. Especializado en visualización arquitectónica, diseño de interiores y visualización de producto para proyectos residenciales, comerciales y de hospitalidad." data-en="Architect and senior 3D artist based in Buenos Aires. Specialized in architectural visualization, interior design, and product visualization for residential, commercial, and hospitality projects.">Arquitecto y artista 3D senior radicado en Buenos Aires. Especializado en visualización arquitectónica, diseño de interiores y visualización de producto para proyectos residenciales, comerciales y de hospitalidad.</p>
+    <p class="about-text" data-es="Renders, animaciones y experiencias VR que comunican espacio, materialidad y atmósfera antes de construir." data-en="Renders, animations, and VR experiences that communicate space, material, and atmosphere before building.">Renders, animaciones y experiencias VR que comunican espacio, materialidad y atmósfera antes de construir.</p>
+  </div>
+  <div class="about-stats reveal">
+    <div class="stat"><div class="stat-num">40+</div><div class="stat-label" data-es="Proyectos" data-en="Projects">Proyectos</div></div>
+    <div class="stat"><div class="stat-num" style="font-size:1.6rem;letter-spacing:.08em">BS AS · USA<br>CA · MX</div><div class="stat-label" data-es="Proyectos en" data-en="Projects in">Proyectos en</div></div>
+    <div class="stat"><div class="stat-num" style="font-size:1.1rem;line-height:1.3">VR<br>Visualización Interactiva<br>Animación</div><div class="stat-label" data-es="Servicios" data-en="Services">Servicios</div></div>
+    <div class="stat"><div class="stat-num" style="font-size:1.2rem;line-height:1.3">Arquitecto<br>Artista 3D<br>Interiorismo</div><div class="stat-label"></div></div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <p class="contact-over reveal" data-es="Disponible para proyectos" data-en="Available for projects">Disponible para proyectos</p>
+  <h2 class="contact-title reveal" data-es="Hablemos" data-en="Let's Talk">Hablemos</h2>
+  <div class="contact-links reveal">
+    <a href="mailto:tomas.parodi@hotmail.com" class="c-link">tomas.parodi@hotmail.com</a>
+    <a href="https://wa.me/5491167302929" class="c-link" target="_blank">WhatsApp</a>
+    <a href="https://www.linkedin.com/in/arq-paroditomas/" class="c-link" target="_blank">LinkedIn</a>
+  </div>
+</section>
+
+<footer>
+  <p>© 2026 Tomás Parodi</p>
+  <p data-es="Arquitectura &amp; Visualización · Buenos Aires, Argentina" data-en="Architecture &amp; Visualization · Buenos Aires, Argentina">Arquitectura &amp; Visualización · Buenos Aires, Argentina</p>
+</footer>
+
+<!-- VR FULLSCREEN OVERLAY (separate viewer) -->
+<div id="vrFullscreen">
+  <div class="vr-full-canvas" id="panoramaFull"></div>
+</div>
+<button class="vr-close" id="vrClose" aria-label="Close">×</button>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+  <span class="lb-close" id="lbClose">ESC · Close</span>
+  <button class="lb-prev" id="lbPrev">‹</button>
+  <button class="lb-next" id="lbNext">›</button>
+  <img id="lbImg" src="" alt="">
+</div>
+
+<script>
+/* CURSOR */
+const cursor=document.getElementById('cursor'),ring=document.getElementById('ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cursor.style.left=mx+'px';cursor.style.top=my+'px';});
+(function loop(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(loop);})();
+
+/* INTRO */
+const intro=document.getElementById('intro');
+setTimeout(()=>{intro.classList.add('fade-out');setTimeout(()=>intro.remove(),1000);},2500);
+
+/* NAV */
+const nav=document.getElementById('nav');
+let lastY=0;
+window.addEventListener('scroll',()=>{
+  const y=window.scrollY;
+  nav.classList.toggle('scrolled',y>60);
+  nav.classList.toggle('hidden',y>lastY&&y>240);
+  lastY=y;
+},{passive:true});
+
+/* HERO BG */
+const heroBg=document.getElementById('heroBg');
+const hsrc='https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778280790/Drone_Airport_7_wl22fj.jpg';
+heroBg.style.backgroundImage=`url('${hsrc}')`;
+const pi=new Image();pi.onload=()=>heroBg.classList.add('ready');pi.src=hsrc;
+window.addEventListener('scroll',()=>{
+  if(window.scrollY<window.innerHeight)heroBg.style.transform=`scale(1) translateY(${window.scrollY*.28}px)`;
+},{passive:true});
+
+/* REVEAL */
+const ro=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');ro.unobserve(e.target);}});},{threshold:.08,rootMargin:'0px 0px -50px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+
+/* GALLERIES — collect all imgs + click opens lightbox */
+const allLightboxImgs=[];
+document.querySelectorAll('.proj-gallery .img-block').forEach((b)=>{
+  const s=b.getAttribute('data-full');
+  if(!s)return;
+  const idx=allLightboxImgs.length;
+  allLightboxImgs.push(s);
+  b.addEventListener('click',()=>openLightbox(idx));
+});
+
+/* CURSOR HOVERS */
+document.querySelectorAll('a,.img-block,.lang-btn,.vr-shell').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cursor.classList.add('h');ring.classList.add('h');});
+  el.addEventListener('mouseleave',()=>{cursor.classList.remove('h');ring.classList.remove('h');});
+});
+
+/* LIGHTBOX */
+const lb=document.getElementById('lightbox'),lbImg=document.getElementById('lbImg'),lbClose=document.getElementById('lbClose'),lbPrev=document.getElementById('lbPrev'),lbNext=document.getElementById('lbNext');
+let lbIdx=0;
+function preloadAdjacent(idx){
+  [-1,1].forEach(o=>{
+    let i=idx+o;
+    if(i<0)i=allLightboxImgs.length-1;
+    if(i>=allLightboxImgs.length)i=0;
+    const img=new Image();
+    img.src=allLightboxImgs[i];
+  });
+}
+function openLightbox(idx){
+  lbIdx=idx;
+  lbImg.src=allLightboxImgs[idx];
+  lb.classList.add('active');
+  document.body.style.overflow='hidden';
+  preloadAdjacent(idx);
+}
+function lbShow(idx){
+  if(idx<0)idx=allLightboxImgs.length-1;
+  if(idx>=allLightboxImgs.length)idx=0;
+  lbIdx=idx;
+  lbImg.src=allLightboxImgs[idx];
+  preloadAdjacent(idx);
+}
+function closeLb(){lb.classList.remove('active');document.body.style.overflow='';setTimeout(()=>lbImg.src='',300);}
+lb.addEventListener('click',e=>{if(e.target===lb)closeLb();});
+lbClose.addEventListener('click',e=>{e.stopPropagation();closeLb();});
+lbPrev.addEventListener('click',e=>{e.stopPropagation();lbShow(lbIdx-1);});
+lbNext.addEventListener('click',e=>{e.stopPropagation();lbShow(lbIdx+1);});
+document.addEventListener('keydown',e=>{
+  if(!lb.classList.contains('active'))return;
+  if(e.key==='Escape')closeLb();
+  if(e.key==='ArrowLeft')lbShow(lbIdx-1);
+  if(e.key==='ArrowRight')lbShow(lbIdx+1);
+});
+
+/* LANGUAGE */
+const btnEs=document.getElementById('btnEs'),btnEn=document.getElementById('btnEn');
+function setLang(lang){
+  btnEs.classList.toggle('active',lang==='es');
+  btnEn.classList.toggle('active',lang==='en');
+  document.querySelectorAll('[data-'+lang+']').forEach(el=>{
+    const v=el.getAttribute('data-'+lang);
+    if(v.includes('<'))el.innerHTML=v;else el.textContent=v;
+  });
+}
+btnEs.addEventListener('click',()=>setLang('es'));
+btnEn.addEventListener('click',()=>setLang('en'));
+
+/* BURGER MENU */
+const burger=document.getElementById('burger'),navLinks=document.getElementById('navLinks');
+burger.addEventListener('click',()=>{
+  burger.classList.toggle('open');
+  navLinks.classList.toggle('open');
+  document.body.style.overflow=navLinks.classList.contains('open')?'hidden':'';
+});
+navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{
+  burger.classList.remove('open');
+  navLinks.classList.remove('open');
+  document.body.style.overflow='';
+}));
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+<script>
+/* VR — TWO SEPARATE VIEWERS, no transition animation */
+const VR_URL='https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778281189/VR_juos6n.jpg';
+const VR_OPTS_BASE={
+  type:'equirectangular',
+  panorama:VR_URL,
+  autoLoad:true,
+  compass:false,
+  showZoomCtrl:false,
+  showFullscreenCtrl:false,
+  mouseZoom:true,
+  hfov:100,
+  crossOrigin:'anonymous'
+};
+let panoMini=null;
+let panoFull=null;
+
+new IntersectionObserver(entries=>{
+  if(entries[0].isIntersecting&&!panoMini){
+    try{
+      panoMini=pannellum.viewer('panoramaMini',Object.assign({},VR_OPTS_BASE,{
+        autoRotate:-1.5,
+        autoRotateInactivityDelay:3000
+      }));
+    }catch(e){console.error('VR mini init failed',e);}
+  }
+},{threshold:0.2}).observe(document.getElementById('corporate'));
+
+const vrShell=document.getElementById('vrShell');
+const vrFullscreen=document.getElementById('vrFullscreen');
+const vrClose=document.getElementById('vrClose');
+let vrExpanded=false;
+let vrDownX=0,vrDownY=0,vrDidDrag=false;
+
+vrShell.addEventListener('pointerdown',e=>{
+  vrDownX=e.clientX;vrDownY=e.clientY;vrDidDrag=false;
+});
+vrShell.addEventListener('pointermove',e=>{
+  if(Math.abs(e.clientX-vrDownX)>6||Math.abs(e.clientY-vrDownY)>6)vrDidDrag=true;
+});
+vrShell.addEventListener('pointerup',e=>{
+  if(vrDidDrag||vrExpanded)return;
+  expandVR();
+});
+
+function expandVR(){
+  vrFullscreen.classList.add('active');
+  vrClose.classList.add('active');
+  document.body.style.overflow='hidden';
+  vrExpanded=true;
+  if(!panoFull){
+    setTimeout(()=>{
+      try{
+        panoFull=pannellum.viewer('panoramaFull',Object.assign({},VR_OPTS_BASE,{autoRotate:0}));
+      }catch(e){console.error('VR full init failed',e);}
+    },50);
+  }else{
+    setTimeout(()=>{try{panoFull.resize();}catch(e){}},50);
+  }
+}
+
+function collapseVR(){
+  if(!vrExpanded)return;
+  vrFullscreen.classList.remove('active');
+  vrClose.classList.remove('active');
+  document.body.style.overflow='';
+  vrExpanded=false;
+}
+
+vrClose.addEventListener('click',e=>{e.stopPropagation();collapseVR();});
+vrFullscreen.addEventListener('click',e=>{
+  if(e.target===vrFullscreen)collapseVR();
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&vrExpanded)collapseVR();
+});
+
+window.addEventListener('resize',()=>{
+  if(vrExpanded&&panoFull){try{panoFull.resize();}catch(e){}}
+});
+</script>
+</body>
+</html>
