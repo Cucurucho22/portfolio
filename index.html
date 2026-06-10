@@ -584,7 +584,7 @@ let zScale=1,zTx=0,zTy=0;
 let startScale=1,startTx=0,startTy=0;
 let startDist=0,startMidX=0,startMidY=0;
 let startTouchX=0,startTouchY=0,startT=0;
-let isPinching=false,isPanning=false,moved=false;
+let isPinching=false,isPanning=false,moved=false,wasPinching=false;
 let lastTapT=0;
 const MIN_SCALE=1,MAX_SCALE=4.5;
 
@@ -599,7 +599,6 @@ function resetZoom(animate){
 function clampPan(){
   /* Keep image within reasonable bounds when zoomed */
   if(zScale<=1.001){zTx=0;zTy=0;return;}
-  const rect=lbImg.getBoundingClientRect();
   const w=lbImg.offsetWidth,h=lbImg.offsetHeight;
   const maxX=(w*zScale-window.innerWidth)/2;
   const maxY=(h*zScale-window.innerHeight)/2;
@@ -611,18 +610,18 @@ lbImg.addEventListener('touchstart',e=>{
   if(e.touches.length===2){
     /* Pinch start */
     e.preventDefault();
-    isPinching=true;isPanning=false;moved=false;
+    isPinching=true;isPanning=false;moved=false;wasPinching=true;
     const t1=e.touches[0],t2=e.touches[1];
     startDist=Math.hypot(t2.clientX-t1.clientX,t2.clientY-t1.clientY);
     startMidX=(t1.clientX+t2.clientX)/2;
     startMidY=(t1.clientY+t2.clientY)/2;
     startScale=zScale;startTx=zTx;startTy=zTy;
-  }else if(e.touches.length===1){
+  }else if(e.touches.length===1&&!wasPinching){
+    /* Fresh single-finger start (NOT a residual finger from a pinch) */
     const t=e.touches[0];
     startTouchX=t.clientX;startTouchY=t.clientY;
     startT=Date.now();moved=false;
     if(zScale>1.01){
-      /* Pan mode (we are zoomed in) */
       e.preventDefault();
       isPanning=true;
       startTx=zTx;startTy=zTy;
@@ -647,7 +646,7 @@ lbImg.addEventListener('touchmove',e=>{
     clampPan();
     applyZ(false);
     if(Math.abs(dx)>4||Math.abs(dy)>4)moved=true;
-  }else if(e.touches.length===1){
+  }else if(e.touches.length===1&&!wasPinching){
     /* Not zoomed → potential swipe; track movement */
     const t=e.touches[0];
     if(Math.abs(t.clientX-startTouchX)>6||Math.abs(t.clientY-startTouchY)>6)moved=true;
@@ -656,7 +655,7 @@ lbImg.addEventListener('touchmove',e=>{
 
 lbImg.addEventListener('touchend',e=>{
   const touchesLeft=e.touches.length;
-  /* If we were pinching and a finger lifted */
+  /* Pinch finished (one or both fingers lifted) */
   if(isPinching&&touchesLeft<2){
     isPinching=false;
     if(zScale<=1.05){
@@ -667,8 +666,17 @@ lbImg.addEventListener('touchend',e=>{
   }else if(isPanning&&touchesLeft===0){
     isPanning=false;
     clampPan();applyZ(true);
-  }else if(touchesLeft===0&&!isPinching&&!isPanning){
-    /* Single-finger interaction ended (not zoomed) */
+  }
+  /* All fingers are off — finalize gesture */
+  if(touchesLeft===0){
+    if(wasPinching){
+      /* Came from a pinch — DO NOT process tap/swipe with stale coords */
+      wasPinching=false;
+      isPanning=false;
+      return;
+    }
+    if(isPanning){isPanning=false;return;}
+    /* Genuine single-finger gesture */
     const dt=Date.now()-startT;
     const ch=e.changedTouches[0];
     const dx=ch.clientX-startTouchX,dy=ch.clientY-startTouchY;
@@ -682,7 +690,6 @@ lbImg.addEventListener('touchend',e=>{
           resetZoom(true);
         }else{
           zScale=2.5;
-          /* Zoom toward tap point */
           const r=lbImg.getBoundingClientRect();
           const cx=ch.clientX-(r.left+r.width/2);
           const cy=ch.clientY-(r.top+r.height/2);
@@ -712,6 +719,11 @@ lbImg.addEventListener('touchend',e=>{
     }
   }
 },{passive:false});
+
+/* Cancel handling — also reset state */
+lbImg.addEventListener('touchcancel',()=>{
+  isPinching=false;isPanning=false;wasPinching=false;moved=false;
+},{passive:true});
 
 /* Prevent the lightbox container from intercepting taps on the image */
 lbImg.addEventListener('click',e=>e.stopPropagation());
