@@ -98,10 +98,12 @@ nav.hidden{transform:translateY(-100%)}
 /* VR FULLSCREEN OVERLAY (separate viewer, instant) */
 #vrFullscreen{position:fixed;inset:0;z-index:2000;background:#000;display:none}
 #vrFullscreen.active{display:block}
-.vr-full-canvas{width:100%;height:100%}
-.vr-close{position:fixed;top:24px;right:24px;width:44px;height:44px;background:rgba(0,0,0,.6);border:1px solid var(--line);color:var(--text);font-size:1.5rem;cursor:pointer;z-index:2001;transition:background .3s,border-color .3s;display:none;align-items:center;justify-content:center;line-height:1;border-radius:2px}
+.vr-full-canvas{width:100%;height:100%;touch-action:none}
+.vr-close{position:fixed;top:calc(20px + env(safe-area-inset-top,0px));right:calc(20px + env(safe-area-inset-right,0px));width:48px;height:48px;background:rgba(0,0,0,.78);border:1px solid rgba(240,235,224,.3);color:var(--text);font-size:1.6rem;cursor:pointer;z-index:2010;transition:background .3s,border-color .3s;display:none;align-items:center;justify-content:center;line-height:1;border-radius:50%;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:auto;-webkit-tap-highlight-color:transparent}
 .vr-close.active{display:flex}
-.vr-close:hover{background:rgba(0,0,0,.9);border-color:var(--accent)}
+.vr-close:hover,.vr-close:active{background:rgba(0,0,0,.95);border-color:var(--accent)}
+.vr-exit-hint{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(240,235,224,.7);background:rgba(0,0,0,.6);padding:9px 18px;border-radius:20px;z-index:2010;display:none;pointer-events:none;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.vr-exit-hint.active{display:block;animation:fadeHint 1s ease 3.5s forwards}
 
 /* ABOUT */
 #about{padding:128px 56px;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
@@ -150,8 +152,20 @@ footer p{font-size:.62rem;letter-spacing:.1em;color:var(--muted)}
 
 /* TOUCH DEVICES */
 @media (hover:none) and (pointer:coarse){
-  body{cursor:auto}
+  body{cursor:auto;-webkit-tap-highlight-color:transparent}
   .cursor,.cursor-ring{display:none}
+  *{-webkit-tap-highlight-color:transparent}
+  /* On touch devices, hover never fires — keep images at full brightness */
+  .proj-gallery img{filter:brightness(1)!important}
+  .proj-gallery .img-block:active img{transform:scale(.99);transition:transform .15s ease}
+  /* Make tags tappable */
+  .tag{padding:5px 11px;font-size:.56rem}
+  /* Bigger touch targets for lang buttons */
+  .lang-btn{min-height:36px;min-width:36px;display:inline-flex;align-items:center;justify-content:center}
+  /* Hide drag-related cursor hints */
+  .vr-shell{cursor:pointer}
+  /* Prevent zoom on double-tap for interactive elements */
+  .img-block,.tag,.lang-btn,button,a{touch-action:manipulation}
 }
 
 /* MOBILE */
@@ -187,7 +201,7 @@ footer p{font-size:.62rem;letter-spacing:.1em;color:var(--muted)}
   .tag{font-size:.54rem;padding:3px 8px}
   
   .proj-gallery{gap:4px}
-  .proj-gallery .img-block{height:200px!important}
+  .proj-gallery .img-block{height:calc(var(--row-h,300px) * 0.62)!important;min-height:180px;max-height:260px}
   
   #about{padding:72px 20px;grid-template-columns:1fr;gap:40px}
   .about-title{font-size:clamp(1.8rem,8vw,2.6rem)}
@@ -451,6 +465,7 @@ footer p{font-size:.62rem;letter-spacing:.1em;color:var(--muted)}
   <div class="vr-full-canvas" id="panoramaFull"></div>
 </div>
 <button class="vr-close" id="vrClose" aria-label="Close">×</button>
+<div class="vr-exit-hint" id="vrExitHint" data-es="Tocá × o deslizá hacia abajo para salir" data-en="Tap × or swipe down to exit">Tocá × o deslizá hacia abajo para salir</div>
 
 <!-- LIGHTBOX -->
 <div id="lightbox">
@@ -548,6 +563,30 @@ document.addEventListener('keydown',e=>{
   if(e.key==='ArrowRight')lbShow(lbIdx+1);
 });
 
+/* LIGHTBOX SWIPE — left/right to navigate, down to close (mobile) */
+let lbTouchStartX=null,lbTouchStartY=null,lbTouchStartT=0;
+lb.addEventListener('touchstart',e=>{
+  if(e.touches.length!==1)return;
+  lbTouchStartX=e.touches[0].clientX;
+  lbTouchStartY=e.touches[0].clientY;
+  lbTouchStartT=Date.now();
+},{passive:true});
+lb.addEventListener('touchend',e=>{
+  if(lbTouchStartX===null||e.changedTouches.length!==1)return;
+  const dx=e.changedTouches[0].clientX-lbTouchStartX;
+  const dy=e.changedTouches[0].clientY-lbTouchStartY;
+  const dt=Date.now()-lbTouchStartT;
+  const absX=Math.abs(dx),absY=Math.abs(dy);
+  if(dt<600){
+    if(absX>60&&absX>absY*1.5){
+      if(dx<0)lbShow(lbIdx+1);else lbShow(lbIdx-1);
+    }else if(dy>110&&absY>absX*1.5){
+      closeLb();
+    }
+  }
+  lbTouchStartX=null;lbTouchStartY=null;
+});
+
 /* LANGUAGE */
 const btnEs=document.getElementById('btnEs'),btnEn=document.getElementById('btnEn');
 function setLang(lang){
@@ -590,6 +629,7 @@ const VR_OPTS_BASE={
   hfov:100,
   crossOrigin:'anonymous'
 };
+const isMobile=window.matchMedia('(hover:none) and (pointer:coarse)').matches;
 let panoMini=null;
 let panoFull=null;
 
@@ -597,7 +637,7 @@ new IntersectionObserver(entries=>{
   if(entries[0].isIntersecting&&!panoMini){
     try{
       panoMini=pannellum.viewer('panoramaMini',Object.assign({},VR_OPTS_BASE,{
-        autoRotate:-1.5,
+        autoRotate:isMobile?0:-1.5,
         autoRotateInactivityDelay:3000
       }));
     }catch(e){console.error('VR mini init failed',e);}
@@ -607,6 +647,7 @@ new IntersectionObserver(entries=>{
 const vrShell=document.getElementById('vrShell');
 const vrFullscreen=document.getElementById('vrFullscreen');
 const vrClose=document.getElementById('vrClose');
+const vrExitHint=document.getElementById('vrExitHint');
 let vrExpanded=false;
 let vrDownX=0,vrDownY=0,vrDidDrag=false;
 
@@ -624,6 +665,7 @@ vrShell.addEventListener('pointerup',e=>{
 function expandVR(){
   vrFullscreen.classList.add('active');
   vrClose.classList.add('active');
+  if(vrExitHint)vrExitHint.classList.add('active');
   document.body.style.overflow='hidden';
   vrExpanded=true;
   if(!panoFull){
@@ -641,14 +683,43 @@ function collapseVR(){
   if(!vrExpanded)return;
   vrFullscreen.classList.remove('active');
   vrClose.classList.remove('active');
+  if(vrExitHint)vrExitHint.classList.remove('active');
   document.body.style.overflow='';
   vrExpanded=false;
 }
 
-vrClose.addEventListener('click',e=>{e.stopPropagation();collapseVR();});
+/* Close button — handle both click and touchend, stopPropagation aggressively */
+['click','touchend','pointerup'].forEach(evt=>{
+  vrClose.addEventListener(evt,e=>{
+    e.stopPropagation();
+    e.preventDefault();
+    collapseVR();
+  },{passive:false});
+});
+
+/* Backdrop click (only triggers on direct overlay click, not on canvas) */
 vrFullscreen.addEventListener('click',e=>{
   if(e.target===vrFullscreen)collapseVR();
 });
+
+/* Swipe down to close on mobile */
+let swipeStartY=null,swipeStartX=null,swipeStartT=0;
+vrFullscreen.addEventListener('touchstart',e=>{
+  if(e.touches.length!==1)return;
+  swipeStartY=e.touches[0].clientY;
+  swipeStartX=e.touches[0].clientX;
+  swipeStartT=Date.now();
+},{passive:true});
+vrFullscreen.addEventListener('touchend',e=>{
+  if(swipeStartY===null||e.changedTouches.length!==1)return;
+  const dy=e.changedTouches[0].clientY-swipeStartY;
+  const dx=Math.abs(e.changedTouches[0].clientX-swipeStartX);
+  const dt=Date.now()-swipeStartT;
+  /* Swipe down: dy > 120px, mostly vertical, fast enough */
+  if(dy>120&&dx<80&&dt<600)collapseVR();
+  swipeStartY=null;
+});
+
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&vrExpanded)collapseVR();
 });
