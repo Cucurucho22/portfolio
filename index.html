@@ -134,8 +134,8 @@ footer p{font-size:.62rem;letter-spacing:.1em;color:var(--muted)}
 #lightbox.active{opacity:1;pointer-events:all}
 #lightbox img{max-width:90vw;max-height:90vh;object-fit:contain;transform:scale(.96);transition:transform .3s}
 #lightbox.active img{transform:scale(1)}
-.lb-close{position:fixed;top:32px;right:56px;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:color .3s;z-index:1001}
-.lb-close:hover{color:var(--text)}
+.lb-close{position:fixed;top:calc(20px + env(safe-area-inset-top,0px));right:calc(20px + env(safe-area-inset-right,0px));width:48px;height:48px;background:rgba(0,0,0,.78);border:1px solid rgba(240,235,224,.3);color:var(--text);font-size:1.6rem;cursor:pointer;z-index:1010;transition:background .3s,border-color .3s;display:flex;align-items:center;justify-content:center;line-height:1;border-radius:50%;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);-webkit-tap-highlight-color:transparent}
+.lb-close:hover,.lb-close:active{background:rgba(0,0,0,.95);border-color:var(--accent)}
 .lb-prev,.lb-next{position:fixed;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.5);border:1px solid var(--line);color:var(--text);font-size:3rem;padding:20px 16px;cursor:pointer;transition:background .3s,border-color .3s;z-index:1001;line-height:1}
 .lb-prev{left:20px}
 .lb-next{right:20px}
@@ -221,7 +221,6 @@ footer p{font-size:.62rem;letter-spacing:.1em;color:var(--muted)}
   footer{padding:20px;flex-direction:column;gap:10px;text-align:center}
   footer p{font-size:.56rem}
   
-  .lb-close{top:20px;right:20px;font-size:.58rem}
   .lb-prev,.lb-next{font-size:2rem;padding:14px 10px}
 }
 
@@ -469,7 +468,7 @@ footer p{font-size:.62rem;letter-spacing:.1em;color:var(--muted)}
 
 <!-- LIGHTBOX -->
 <div id="lightbox">
-  <span class="lb-close" id="lbClose">ESC · Close</span>
+  <span class="lb-close" id="lbClose" aria-label="Close">×</span>
   <button class="lb-prev" id="lbPrev">‹</button>
   <button class="lb-next" id="lbNext">›</button>
   <img id="lbImg" src="" alt="">
@@ -618,6 +617,7 @@ navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{
 <script>
 /* VR — TWO SEPARATE VIEWERS, no transition animation */
 const VR_URL='https://res.cloudinary.com/dhadbboqx/image/upload/f_auto,q_85/v1778281189/VR_juos6n.jpg';
+const isMobile=window.matchMedia('(hover:none) and (pointer:coarse)').matches;
 const VR_OPTS_BASE={
   type:'equirectangular',
   panorama:VR_URL,
@@ -626,10 +626,11 @@ const VR_OPTS_BASE={
   showZoomCtrl:false,
   showFullscreenCtrl:false,
   mouseZoom:true,
-  hfov:100,
+  hfov:isMobile?75:100,
+  minHfov:40,
+  maxHfov:120,
   crossOrigin:'anonymous'
 };
-const isMobile=window.matchMedia('(hover:none) and (pointer:coarse)').matches;
 let panoMini=null;
 let panoFull=null;
 
